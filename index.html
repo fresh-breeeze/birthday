@@ -340,10 +340,9 @@
   <p style="font-size:13px; color:var(--purple); font-weight:600; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:0.5rem;">рубрика дети лукойла</p>
   <p class="home-sub">Оставь пожелание или — если ты именинник — открывай подарки!</p>
   <div class="btn-group">
-    <button class="btn-main primary" onclick="goTo('pg-add')">✏️ Написать пожелание</button>
-    <button class="btn-main ghost" onclick="goTo('pg-bday-setup')">🎂 Я именинник!</button>
-    <button class="btn-main ghost" style="font-size:13px; padding:12px;" onclick="goTo('pg-lukoil')">🛢 Почему дети Лукойла?</button>
-    <button class="btn-main ghost" style="font-size:13px; padding:12px;" onclick="goTo('pg-manage')">⚙️ Управление</button>
+    <button class="btn-main primary" onclick="goTo('pg-bday-setup')">🎂 Я именинник!</button>
+    <button class="btn-main ghost" onclick="goTo('pg-add')">✏️ Написать пожелание</button>
+    <button class="btn-main ghost" onclick="goTo('pg-lukoil')">🛢 Почему дети Лукойла?</button>
   </div>
 </div>
 
@@ -494,7 +493,13 @@ let gameState = {
   done: false
 };
 
-// ── NAVIGATION ──
+// ── СКРЫТЫЙ ДОСТУП К УПРАВЛЕНИЮ ──
+// Кнопку с главной убрали, чтобы сотрудники её не видели.
+// Твоя личная ссылка: адрес_страницы/#manage — открывает страницу управления сразу.
+if (window.location.hash === '#manage') {
+  window.addEventListener('DOMContentLoaded', () => goTo('pg-manage'));
+}
+
 function goTo(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
