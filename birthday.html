@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎁 Как хорошо, что ты родился!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── НАСТРОЙКИ ── вставь сюда свой Slack Webhook URL */
+  /* см. переменную SLACK_WEBHOOK_URL в <script> внизу */
+
+  :root {
+    --purple: #7C6FF7;
+    --purple-light: #EEF0FF;
+    --purple-dark: #4B44B8;
+    --gold: #F4B942;
+    --gold-light: #FEF7E6;
+    --bg: #F7F6FF;
+    --card: #FFFFFF;
+    --text: #1A1835;
+    --muted: #7B7A9A;
+    --border: rgba(124,111,247,0.15);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ─── HERO / HOME ─── */
+  #pg-home {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: linear-gradient(160deg, #EEF0FF 0%, #F7F6FF 60%);
+  }
+
+  .home-emoji { font-size: 72px; margin-bottom: 1rem; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+  .home-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(22px, 5vw, 36px);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, var(--purple-dark), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .home-sub { font-size: 15px; color: var(--muted); max-width: 340px; line-height: 1.6; margin: 0 auto 2.5rem; }
+
+  .btn-group { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px; }
+
+  .btn-main {
+    padding: 16px 28px;
+    border-radius: 50px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-main:active { transform: scale(0.97); }
+  .btn-main.primary { background: var(--purple); color: white; box-shadow: 0 4px 20px rgba(124,111,247,0.35); }
+  .btn-main.primary:hover { box-shadow: 0 6px 28px rgba(124,111,247,0.45); transform: translateY(-1px); }
+  .btn-main.ghost { background: white; color: var(--purple); border: 1.5px solid var(--purple); }
+  .btn-main.ghost:hover { background: var(--purple-light); }
+
+  /* ─── SHARED HEADER ─── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    color: var(--muted);
+    transition: background 0.15s;
+  }
+  .back-btn:hover { background: var(--purple-light); color: var(--purple); }
+  .page-title { font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 600; }
+
+  /* ─── ADD WISH ─── */
+  #pg-add { background: white; }
+  .form-body { padding: 1.5rem; max-width: 480px; margin: 0 auto; width: 100%; }
+
+  .field { margin-bottom: 1.25rem; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--purple); background: white; }
+  .field textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+  .field select { appearance: none; cursor: pointer; }
+
+  .char-count { font-size: 12px; color: var(--muted); text-align: right; margin-top: 4px; }
+
+  .success-banner {
+    display: none;
+    margin: 1rem 0;
+    padding: 14px 18px;
+    background: #EDFDF4;
+    border: 1px solid #6EE7B7;
+    border-radius: var(--radius-sm);
+    color: #065F46;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  /* ─── BIRTHDAY GAME ─── */
+  #pg-game { background: var(--bg); }
+
+  .game-body { padding: 1.25rem 1rem; max-width: 520px; margin: 0 auto; width: 100%; }
+
+  .game-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding: 12px 16px;
+    background: white;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .status-text { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .dot.filled { background: var(--purple); }
+
+  .grid-container { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+
+  .gift-table {
+    border-collapse: separate;
+    border-spacing: 6px;
+    margin: 0 auto;
+  }
+  .grid-col-header {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+    padding: 0 0 4px;
+    width: 52px;
+  }
+  .grid-row-header {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: right;
+    padding-right: 6px;
+    width: 24px;
+  }
+  .gift-cell {
+    width: 52px;
+    height: 52px;
+  }
+  .gift-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .gift-btn:hover:not(:disabled) { transform: scale(1.1); border-color: var(--purple); background: var(--purple-light); }
+  .gift-btn.opened { background: var(--purple-light); border-color: var(--purple); transform: scale(1.05); }
+  .gift-btn:disabled { cursor: default; opacity: 0.35; }
+  .gift-btn.empty { border-style: dashed; opacity: 0.2; cursor: default; }
+
+  /* ─── OPENED WISHES ─── */
+  .wishes-section { margin-top: 1.5rem; }
+  .wishes-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+
+  .wish-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .wish-card:hover { border-color: var(--purple); box-shadow: 0 4px 20px rgba(124,111,247,0.12); }
+  .wish-text { font-size: 15px; line-height: 1.65; color: var(--text); margin-bottom: 12px; }
+  .wish-meta { display: flex; align-items: center; justify-content: space-between; }
+  .wish-author { font-size: 13px; color: var(--muted); }
+  .wish-author strong { color: var(--text); }
+  .choose-btn {
+    padding: 8px 18px;
+    border-radius: 50px;
+    background: var(--purple);
+    color: white;
+    border: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .choose-btn:hover { opacity: 0.85; transform: scale(1.03); }
+
+  /* ─── FINAL ─── */
+  #final-screen {
+    display: none;
+    text-align: center;
+    padding: 2rem 1rem;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+  .confetti-emoji { font-size: 52px; margin-bottom: 1rem; animation: pop 0.5s cubic-bezier(0.36,0.07,0.19,0.97); }
+  @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+  .final-label { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .final-wish-box {
+    background: white;
+    border: 2px solid var(--purple);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 32px rgba(124,111,247,0.15);
+  }
+  .final-wish-text { font-size: 17px; line-height: 1.7; color: var(--text); margin-bottom: 12px; font-style: italic; }
+  .final-from { font-size: 14px; color: var(--muted); }
+  .final-from strong { color: var(--purple); }
+  .slack-note {
+    margin-top: 1rem;
+    padding: 12px 16px;
+    background: #F0F4FF;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: #4A5568;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+  }
+  .slack-dot { width: 8px; height: 8px; border-radius: 50%; background: #6EE7B7; flex-shrink: 0; }
+
+  /* ─── MANAGE ─── */
+  #pg-manage { background: white; }
+  .manage-body { padding: 1.25rem 1rem; max-width: 520px; margin: 0 auto; }
+  .wish-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .wish-item-text { flex: 1; font-size: 14px; line-height: 1.5; }
+  .wish-item-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .delete-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .delete-btn:hover { background: #FEE2E2; color: #DC2626; border-color: #FCA5A5; }
+  .empty-state { padding: 2rem; text-align: center; color: var(--muted); font-size: 14px; }
+  .manage-actions { display: flex; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .btn-sm {
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--text);
+    transition: background 0.15s;
+  }
+  .btn-sm:hover { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+  .btn-sm.danger:hover { background: #FEE2E2; border-color: #FCA5A5; color: #DC2626; }
+
+  /* ─── BIRTHDAY NAME INPUT ─── */
+  .bday-setup {
+    padding: 1.5rem;
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .bday-setup h3 { font-family: 'Unbounded', sans-serif; font-size: 16px; margin-bottom: 8px; }
+  .bday-setup p { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+  .bday-setup input { text-align: center; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HOME ══════════════ -->
+<div id="pg-home" class="page active">
+  <div class="home-emoji">🎁</div>
+  <div class="home-title">Как хорошо,<br>что ты родился!</div>
+  <p style="font-size:13px; color:var(--purple); font-weight:600; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:0.5rem;">рубрика дети лукойла</p>
+  <p class="home-sub">Оставь пожелание или — если ты именинник — открывай подарки!</p>
+  <div class="btn-group">
+    <button class="btn-main primary" onclick="goTo('pg-add')">✏️ Написать пожелание</button>
+    <button class="btn-main ghost" onclick="goTo('pg-bday-setup')">🎂 Я именинник!</button>
+    <button class="btn-main ghost" style="font-size:13px; padding:12px;" onclick="goTo('pg-lukoil')">🛢 Почему дети Лукойла?</button>
+    <button class="btn-main ghost" style="font-size:13px; padding:12px;" onclick="goTo('pg-manage')">⚙️ Управление</button>
+  </div>
+</div>
+
+<!-- ══════════════ ADD WISH ══════════════ -->
+<div id="pg-add" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTo('pg-home')">←</button>
+    <span class="page-title">Написать пожелание</span>
+  </div>
+  <div class="form-body">
+    <p style="font-size:14px; color:var(--muted); margin-bottom:1.5rem; line-height:1.6;">
+      Твоё пожелание спрячется в один из подарков. Именинник откроет его сам — и узнает, от кого оно 🎁
+    </p>
+    <div class="field">
+      <label>От кого</label>
+      <input type="text" id="f-author" placeholder="Введи имя точно как в Slack" maxlength="40">
+      <div class="char-count" style="text-align:left; margin-top:5px;">💡 Напиши своё имя точно так, как оно написано у тебя в Slack — это нужно чтобы уведомить тебя когда именинник выберет твоё пожелание</div>
+    </div>
+    <div class="field">
+      <label>Пожелание</label>
+      <textarea id="f-wish" placeholder="Пиши от души — тепло, смешно или искренне..." maxlength="300" oninput="updateCount()"></textarea>
+      <div class="char-count"><span id="char-num">0</span> / 300</div>
+    </div>
+    <div class="success-banner" id="add-success">
+      ✅ Пожелание спрятано в подарок! Именинник найдёт его сам 🎉
+    </div>
+    <button class="btn-main primary" style="width:100%;" onclick="saveWish()">Спрятать в подарок 🎁</button>
+  </div>
+</div>
+
+<!-- ══════════════ BIRTHDAY SETUP ══════════════ -->
+<div id="pg-bday-setup" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTo('pg-home')">←</button>
+    <span class="page-title">Именинник</span>
+  </div>
+  <div class="bday-setup">
+    <div style="font-size:48px; margin-bottom:12px;">🎂</div>
+    <h3>Как тебя зовут?</h3>
+    <p>Введи своё имя — это нужно для Slack-уведомления коллегам, кто написал тебе пожелание.</p>
+    <div class="field">
+      <input type="text" id="bday-name" placeholder="Введи имя точно как в Slack" maxlength="40">
+      <div class="char-count" style="text-align:left; margin-top:5px;">💡 Напиши своё имя точно так, как оно написано у тебя в Slack</div>
+    </div>
+    <button class="btn-main primary" style="width:100%;" onclick="startGame()">Открывать подарки! 🎉</button>
+  </div>
+</div>
+
+<!-- ══════════════ GAME ══════════════ -->
+<div id="pg-game" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTo('pg-home')">←</button>
+    <span class="page-title" id="game-title">Морской бой 🎁</span>
+  </div>
+  <div class="game-body">
+    <div class="game-status">
+      <span class="status-text" id="status-text">Открой 3 подарка</span>
+      <div class="dots">
+        <div class="dot" id="dot0"></div>
+        <div class="dot" id="dot1"></div>
+        <div class="dot" id="dot2"></div>
+      </div>
+    </div>
+
+    <div class="grid-container">
+      <table class="gift-table" id="grid"></table>
+    </div>
+
+    <div id="opened-section" style="display:none;" class="wishes-section">
+      <div class="wishes-title">Твои пожелания — выбери одно:</div>
+      <div id="wish-list"></div>
+    </div>
+
+    <div id="final-screen">
+      <div class="confetti-emoji">🎉</div>
+      <div class="final-label">Твоё пожелание на этот год</div>
+      <div class="final-wish-box">
+        <div class="final-wish-text" id="final-text"></div>
+        <div class="final-from">пожелал(а) <strong id="final-author"></strong></div>
+      </div>
+      <div style="margin-top:1rem; padding:16px 18px; background:var(--purple-light); border-radius:var(--radius-sm); font-size:14px; line-height:1.7; color:var(--purple-dark); text-align:left;">
+        Ура! Ты выбрал своё пожелание. На ближайшей демо-рыбе мы поделимся твоим «уловом» и попросим тебя рассказать какой-то факт о себе. До встречи! 🐟
+      </div>
+      <div class="slack-note">
+        <div class="slack-dot"></div>
+        <span id="slack-status">Отправляем уведомление в Slack...</span>
+      </div>
+      <button class="btn-main ghost" style="width:100%; margin-top:1rem;" onclick="resetGame(); goTo('pg-home')">
+        На главную
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ LUKOIL ══════════════ -->
+<div id="pg-lukoil" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTo('pg-home')">←</button>
+    <span class="page-title">Почему дети Лукойла?</span>
+  </div>
+  <div class="form-body" style="max-width:480px;">
+    <div style="font-size:48px; text-align:center; margin:1.5rem 0 1.25rem;">🛢</div>
+    <div style="background:var(--purple-light); border-radius:var(--radius); padding:20px 22px; font-size:15px; line-height:1.75; color:var(--text);">
+      Это наша локальная шутка-минутка. Когда-то Поля Захарова-Щукина рассказывала, что будучи ребёнком выступала на празднике «Дети Лукойла» — и она даже фотку нам показала. Рассказ нам понравился и название тоже. Забрали! 😄
+    </div>
+    <button class="btn-main ghost" style="width:100%; margin-top:1.5rem;" onclick="goTo('pg-home')">← На главную</button>
+  </div>
+</div>
+
+<!-- ══════════════ MANAGE ══════════════ -->
+<div id="pg-manage" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTo('pg-home')">←</button>
+    <span class="page-title">Управление пожеланиями</span>
+  </div>
+  <div class="manage-body">
+    <div style="margin-bottom:1rem; padding:12px 16px; background:var(--purple-light); border-radius:var(--radius-sm); font-size:13px; color:var(--purple-dark); line-height:1.6;">
+      💡 Пожелания хранятся в гугл-таблице «ДР — Пожелания» — там же их можно удалить или отредактировать. Здесь только просмотр неиспользованных.
+    </div>
+    <div id="wish-list-manage"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  ⚙️  НАСТРОЙКИ — замени на свои значения
+// ════════════════════════════════════════════════
+
+const SLACK_WEBHOOK_URL = ''; // больше не используется напрямую — уведомления идут через n8n
+const N8N_WEBHOOK_URL = 'https://automation.carrotquest.io/webhook/7cff3c5f-048b-48e7-8b64-7810e55d642b'; // webhook: выбор пожелания (обрабатывает событие "wish_chosen")
+
+// НОВОЕ: раньше пожелания хранились в localStorage браузера (поэтому именинник не видел
+// пожелания, написанные с других устройств). Теперь это два отдельных n8n-вебхука,
+// которые читают/пишут в общую гугл-таблицу "ДР — Пожелания".
+// Оба нужно создать в n8n — сейчас тут плейсхолдеры, вставь сюда реальные адреса.
+const GET_WISHES_URL = 'ВСТАВЬ_СЮДА_URL_ПОЛУЧЕНИЯ_ПОЖЕЛАНИЙ'; // webhook: отдаёт список неиспользованных пожеланий (GET)
+const ADD_WISH_URL = 'ВСТАВЬ_СЮДА_URL_ДОБАВЛЕНИЯ_ПОЖЕЛАНИЯ'; // webhook: сохраняет новое пожелание (POST)
+
+// ════════════════════════════════════════════════
+
+const ROWS = ['A','B','C','D','E'];
+const COLS = ['1','2','3','4','5'];
+
+let gameState = {
+  opened: [],      // id открытых ячеек
+  wishes: [],      // открытые пожелания
+  bdayName: '',
+  done: false
+};
+
+// ── NAVIGATION ──
+function goTo(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'pg-manage') renderManage();
+}
+
+// ── WISHES STORAGE (через n8n + гугл-таблицу, вместо localStorage) ──
+async function getWishes() {
+  try {
+    const res = await fetch(GET_WISHES_URL);
+    if (!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    // ожидаем массив объектов { id, author, text, used, authorSlackId }
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.error('Не удалось получить пожелания:', e);
+    return [];
+  }
+}
+
+async function saveWish() {
+  const author = document.getElementById('f-author').value.trim();
+  const text = document.getElementById('f-wish').value.trim();
+  if (!author || !text) { alert('Заполни оба поля'); return; }
+
+  const btn = document.querySelector('button[onclick="saveWish()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Сохраняю...'; }
+
+  try {
+    const res = await fetch(ADD_WISH_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author, text })
+    });
+    if (!res.ok) throw new Error('bad status');
+
+    document.getElementById('f-author').value = '';
+    document.getElementById('f-wish').value = '';
+    document.getElementById('char-num').textContent = '0';
+
+    const banner = document.getElementById('add-success');
+    banner.style.display = 'block';
+    setTimeout(() => banner.style.display = 'none', 3500);
+  } catch (e) {
+    alert('Не удалось сохранить пожелание — проверь ADD_WISH_URL или связь с сетью');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Спрятать в подарок 🎁'; }
+  }
+}
+
+function updateCount() {
+  const v = document.getElementById('f-wish').value;
+  document.getElementById('char-num').textContent = v.length;
+}
+
+// ── GAME SETUP ──
+async function startGame() {
+  const name = document.getElementById('bday-name').value.trim();
+  if (!name) { alert('Введи своё имя'); return; }
+  gameState = { opened: [], wishes: [], bdayName: name, done: false };
+  document.getElementById('game-title').textContent = '🎁 С днём рождения, ' + name + '!';
+  document.getElementById('opened-section').style.display = 'none';
+  document.getElementById('final-screen').style.display = 'none';
+  document.getElementById('wish-list').innerHTML = '';
+  updateDots();
+  updateStatus();
+  goTo('pg-game');
+  await buildGrid(); // пожелания грузятся из гугл-таблицы через n8n, поэтому ждём ответ
+}
+
+function resetGame() {
+  gameState = { opened: [], wishes: [], bdayName: '', done: false };
+}
+
+// ── GRID ──
+async function buildGrid() {
+  const table = document.getElementById('grid');
+  table.innerHTML = '<tr><td style="padding:1rem;color:var(--muted);">Загружаю пожелания...</td></tr>';
+
+  const allWishes = (await getWishes()).filter(w => !w.used);
+
+  table.innerHTML = '';
+
+  // Header row
+  const hRow = document.createElement('tr');
+  hRow.innerHTML = '<td style="width:30px;"></td>';
+  COLS.forEach(c => {
+    const th = document.createElement('th');
+    th.className = 'grid-col-header';
+    th.textContent = c;
+    hRow.appendChild(th);
+  });
+  table.appendChild(hRow);
+
+  ROWS.forEach(row => {
+    const tr = document.createElement('tr');
+    const rh = document.createElement('td');
+    rh.className = 'grid-row-header';
+    rh.textContent = row;
+    tr.appendChild(rh);
+
+    COLS.forEach(col => {
+      const cellId = row + col;
+      const td = document.createElement('td');
+      td.className = 'gift-cell';
+
+      // Assign wish to cell deterministically (cycle through)
+      const idx = (ROWS.indexOf(row) * 5 + COLS.indexOf(col)) % allWishes.length;
+      const hasWish = allWishes.length > 0;
+
+      const btn = document.createElement('button');
+      btn.className = 'gift-btn' + (hasWish ? '' : ' empty');
+      btn.id = 'cell-' + cellId;
+      btn.textContent = hasWish ? '🎁' : '';
+      btn.disabled = !hasWish || gameState.done;
+      btn.setAttribute('aria-label', 'Подарок ' + cellId);
+
+      if (hasWish) {
+        btn.onclick = () => openCell(cellId, allWishes[idx], btn);
+      }
+      td.appendChild(btn);
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+}
+
+function openCell(cellId, wish, btn) {
+  if (gameState.done) return;
+  if (gameState.opened.includes(cellId)) return;
+  if (gameState.opened.length >= 3) return;
+
+  gameState.opened.push(cellId);
+  gameState.wishes.push(wish);
+  btn.textContent = '✨';
+  btn.classList.add('opened');
+  btn.disabled = true;
+
+  updateDots();
+  updateStatus();
+
+  if (gameState.opened.length === 3) {
+    showWishes();
+  }
+}
+
+function updateDots() {
+  for (let i = 0; i < 3; i++) {
+    const d = document.getElementById('dot' + i);
+    d.className = 'dot' + (i < gameState.opened.length ? ' filled' : '');
+  }
+}
+
+function updateStatus() {
+  const n = gameState.opened.length;
+  const s = document.getElementById('status-text');
+  if (n < 3) s.textContent = 'Открой ещё ' + (3 - n) + ' подарок' + (3 - n === 1 ? '' : 'а');
+  else s.textContent = 'Выбери одно пожелание';
+}
+
+// ── SHOW WISHES ──
+function showWishes() {
+  const sec = document.getElementById('opened-section');
+  const list = document.getElementById('wish-list');
+  sec.style.display = 'block';
+  list.innerHTML = '';
+
+  gameState.wishes.forEach((w, i) => {
+    const card = document.createElement('div');
+    card.className = 'wish-card';
+    card.innerHTML = `
+      <div class="wish-text">"${escHtml(w.text)}"</div>
+      <div class="wish-meta">
+        <span class="wish-author">от <strong>${escHtml(w.author)}</strong></span>
+        <button class="choose-btn" onclick="chooseFinal(${i})">Выбрать ✨</button>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── CHOOSE FINAL ──
+function chooseFinal(i) {
+  const w = gameState.wishes[i];
+  gameState.done = true;
+
+  document.getElementById('opened-section').style.display = 'none';
+  document.getElementById('final-text').textContent = '"' + w.text + '"';
+  document.getElementById('final-author').textContent = w.author;
+
+  const fs = document.getElementById('final-screen');
+  fs.style.display = 'block';
+  fs.scrollIntoView({ behavior: 'smooth' });
+
+  // Disable all remaining grid buttons
+  document.querySelectorAll('.gift-btn:not(.opened)').forEach(b => b.disabled = true);
+
+  sendSlack(w, gameState.bdayName);
+}
+
+// ── N8N WEBHOOK ──
+async function sendSlack(wish, bdayName) {
+  const el = document.getElementById('slack-status');
+  if (!N8N_WEBHOOK_URL || N8N_WEBHOOK_URL.includes('ВСТАВЬ')) {
+    el.textContent = '⚠️ n8n не настроен — замени N8N_WEBHOOK_URL в коде';
+    return;
+  }
+  try {
+    // Ищем Slack ID автора из списка пожеланий (если он был сохранён)
+    const payload = {
+      scenario: 'wish_chosen',
+      birthdayPersonName: bdayName,
+      birthdayPersonSlackId: gameState.bdaySlackId || '',
+      wishText: wish.text,
+      wishAuthor: wish.author,
+      wishAuthorSlackId: wish.authorSlackId || ''
+    };
+
+    await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    el.textContent = '✅ Уведомления отправлены в Slack!';
+    document.querySelector('.slack-dot').style.background = '#6EE7B7';
+  } catch (e) {
+    el.textContent = '⚠️ Не удалось отправить — проверь N8N_WEBHOOK_URL';
+  }
+}
+
+// ── MANAGE ──
+// Пожелания теперь живут в гугл-таблице "ДР — Пожелания" (не в localStorage),
+// поэтому удаление/просмотр всех записей — через саму таблицу, а не через эту страницу.
+async function renderManage() {
+  const list = document.getElementById('wish-list-manage');
+  list.innerHTML = '<div style="padding:1rem;color:var(--muted);">Загружаю неиспользованные пожелания...</div>';
+  const wishes = await getWishes();
+  if (!wishes.length) {
+    list.innerHTML = '<div class="empty-state">Пожеланий пока нет.<br>Попроси коллег добавить их через форму!</div>';
+    return;
+  }
+  list.innerHTML = wishes.map(w => `
+    <div class="wish-item">
+      <div class="wish-item-text">
+        <div>${escHtml(w.text)}</div>
+        <div class="wish-item-meta">от ${escHtml(w.author)}</div>
+      </div>
+    </div>`).join('') + '<div class="empty-state" style="margin-top:1rem;">Удалить или отредактировать пожелание можно прямо в гугл-таблице «ДР — Пожелания».</div>';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
