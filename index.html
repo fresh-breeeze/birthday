@@ -472,7 +472,7 @@
 // ════════════════════════════════════════════════
 
 const SLACK_WEBHOOK_URL = ''; // больше не используется напрямую — уведомления идут через n8n
-const N8N_WEBHOOK_URL = 'https://automation.carrotquest.io/webhook/7cff3c5f-048b-48e7-8b64-7810e55d642b'; // webhook: выбор пожелания (обрабатывает событие "wish_chosen")
+const N8N_WEBHOOK_URL = 'https://automation.carrotquest.io/webhook/wish-chosen'; // webhook: выбор пожелания (обрабатывает событие "wish_chosen")
 
 // НОВОЕ: раньше пожелания хранились в localStorage браузера (поэтому именинник не видел
 // пожелания, написанные с других устройств). Теперь это два отдельных n8n-вебхука,
@@ -712,6 +712,7 @@ async function sendSlack(wish, bdayName) {
     // Ищем Slack ID автора из списка пожеланий (если он был сохранён)
     const payload = {
       scenario: 'wish_chosen',
+      wishId: wish.id,
       birthdayPersonName: bdayName,
       birthdayPersonSlackId: gameState.bdaySlackId || '',
       wishText: wish.text,
