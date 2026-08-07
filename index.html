@@ -147,7 +147,7 @@
   /* ─── BIRTHDAY GAME ─── */
   #pg-game { background: var(--bg); }
 
-  .game-body { padding: 1.25rem 1.5rem; max-width: 720px; margin: 0 auto; width: 100%; }
+  .game-body { padding: 1.5rem 2rem; max-width: 960px; margin: 0 auto; width: 100%; }
 
   .game-status {
     display: flex;
@@ -194,12 +194,12 @@
     height: 52px;
   }
   .gift-btn {
-    width: 52px;
-    height: 52px;
+    width: 60px;
+    height: 60px;
     border-radius: var(--radius-sm);
     border: 1.5px solid var(--border);
     background: white;
-    font-size: 24px;
+    font-size: 28px;
     cursor: pointer;
     transition: transform 0.15s, border-color 0.15s, background 0.15s;
     display: flex;
@@ -213,29 +213,29 @@
 
   /* ─── OPENED WISHES ─── */
   .wishes-section { margin-top: 1.5rem; }
-  .wishes-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+  .wishes-title { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 14px; }
 
   .wish-card {
     background: white;
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 10px;
+    padding: 22px 24px;
+    margin-bottom: 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   .wish-card:hover { border-color: var(--purple); box-shadow: 0 4px 20px rgba(124,111,247,0.12); }
-  .wish-text { font-size: 15px; line-height: 1.65; color: var(--text); margin-bottom: 12px; }
+  .wish-text { font-size: 19px; line-height: 1.65; color: var(--text); margin-bottom: 16px; }
   .wish-meta { display: flex; align-items: center; justify-content: space-between; }
-  .wish-author { font-size: 13px; color: var(--muted); }
+  .wish-author { font-size: 14px; color: var(--muted); }
   .wish-author strong { color: var(--text); }
   .choose-btn {
-    padding: 8px 18px;
+    padding: 10px 22px;
     border-radius: 50px;
     background: var(--purple);
     color: white;
     border: none;
     font-family: 'Manrope', sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: opacity 0.15s, transform 0.15s;
@@ -247,7 +247,7 @@
     display: none;
     text-align: center;
     padding: 2rem 1rem;
-    max-width: 440px;
+    max-width: 680px;
     margin: 0 auto;
   }
   .confetti-emoji { font-size: 52px; margin-bottom: 1rem; animation: pop 0.5s cubic-bezier(0.36,0.07,0.19,0.97); }
@@ -257,11 +257,11 @@
     background: white;
     border: 2px solid var(--purple);
     border-radius: var(--radius);
-    padding: 24px 20px;
+    padding: 30px 26px;
     margin-bottom: 12px;
     box-shadow: 0 8px 32px rgba(124,111,247,0.15);
   }
-  .final-wish-text { font-size: 17px; line-height: 1.7; color: var(--text); margin-bottom: 12px; font-style: italic; }
+  .final-wish-text { font-size: 21px; line-height: 1.7; color: var(--text); margin-bottom: 12px; font-style: italic; }
   .final-from { font-size: 14px; color: var(--muted); }
   .final-from strong { color: var(--purple); }
   .slack-note {
@@ -412,7 +412,7 @@
       </ul>
     </div>
     <div id="gift-list" style="display:flex; flex-direction:column; gap:10px;"></div>
-    <div id="gift-final" style="display:none; text-align:center; margin-top:1.5rem;">
+    <div id="gift-final" style="display:none; text-align:center; margin-top:1.5rem; max-width:680px; margin-left:auto; margin-right:auto;">
       <div class="confetti-emoji">🎉</div>
       <div class="final-label">Твой подарок на этот год</div>
       <div class="final-wish-box">
@@ -422,7 +422,8 @@
         <div class="slack-dot"></div>
         <span id="gift-slack-status">Отправляем уведомление в Slack...</span>
       </div>
-      <button class="btn-main ghost" style="width:100%; margin-top:1rem;" onclick="goTo('pg-home')">На главную</button>
+      <button class="btn-main primary" style="width:100%; margin-top:1rem;" onclick="goToWishesFromGift()">Если ты ещё не выбрал пожелание — выбери 🎁</button>
+      <button class="btn-main ghost" style="width:100%; margin-top:10px;" onclick="goTo('pg-home')">На главную</button>
     </div>
   </div>
 </div>
@@ -469,7 +470,8 @@
         <div class="slack-dot"></div>
         <span id="slack-status">Отправляем уведомление в Slack...</span>
       </div>
-      <button class="btn-main ghost" style="width:100%; margin-top:1rem;" onclick="resetGame(); goTo('pg-home')">
+      <button class="btn-main primary" style="width:100%; margin-top:1rem;" onclick="goToGiftsFromWish()">Если ты ещё не выбрал подарок от компании — выбери 🎉</button>
+      <button class="btn-main ghost" style="width:100%; margin-top:10px;" onclick="resetGame(); goTo('pg-home')">
         На главную
       </button>
     </div>
@@ -617,7 +619,14 @@ function updateCount() {
 async function startGame() {
   const name = document.getElementById('bday-name').value.trim();
   if (!name) { alert('Введи своё имя'); return; }
-  gameState = { opened: [], wishes: [], bdayName: name, done: false };
+  await enterWishes(name);
+}
+
+async function enterWishes(name) {
+  gameState.bdayName = name;
+  gameState.opened = [];
+  gameState.wishes = [];
+  gameState.done = false;
   document.getElementById('game-title').textContent = '🎁 С днём рождения, ' + name + '!';
   document.getElementById('opened-section').style.display = 'none';
   document.getElementById('final-screen').style.display = 'none';
@@ -628,6 +637,10 @@ async function startGame() {
   await buildGrid(); // пожелания грузятся из гугл-таблицы через n8n, поэтому ждём ответ
 }
 
+function goToWishesFromGift() {
+  enterWishes(gameState.bdayName);
+}
+
 function resetGame() {
   gameState = { opened: [], wishes: [], bdayName: '', done: false };
 }
@@ -636,11 +649,19 @@ function resetGame() {
 function startGiftShowcase() {
   const name = document.getElementById('bday-name').value.trim();
   if (!name) { alert('Введи своё имя'); return; }
+  enterGifts(name);
+}
+
+function enterGifts(name) {
   gameState.bdayName = name;
   document.getElementById('gifts-title').textContent = '🎉 Выбери подарок, ' + name + '!';
   document.getElementById('gift-final').style.display = 'none';
   renderGifts();
   goTo('pg-gifts');
+}
+
+function goToGiftsFromWish() {
+  enterGifts(gameState.bdayName);
 }
 
 function renderGifts() {
@@ -651,27 +672,27 @@ function renderGifts() {
     const row = document.createElement('div');
     row.style.display = 'flex';
     row.style.alignItems = 'stretch';
-    row.style.gap = '12px';
-    row.style.padding = '12px';
+    row.style.gap = '16px';
+    row.style.padding = '16px';
     row.style.background = '#F8F8FC';
     row.style.borderRadius = 'var(--radius-sm)';
 
     const btn = document.createElement('button');
     btn.className = 'btn-main primary';
-    btn.style.flex = '0 0 40%';
-    btn.style.minWidth = '110px';
-    btn.style.fontSize = '13px';
-    btn.style.lineHeight = '1.3';
+    btn.style.flex = '0 0 38%';
+    btn.style.minWidth = '140px';
+    btn.style.fontSize = '14px';
+    btn.style.lineHeight = '1.35';
     btn.style.whiteSpace = 'normal';
     btn.style.height = 'auto';
-    btn.style.padding = '10px 8px';
+    btn.style.padding = '12px 10px';
     btn.textContent = gift.name;
     btn.onclick = () => chooseGift(gift.name);
 
     const desc = document.createElement('div');
     desc.style.flex = '1';
-    desc.style.fontSize = '12.5px';
-    desc.style.lineHeight = '1.5';
+    desc.style.fontSize = '14px';
+    desc.style.lineHeight = '1.55';
     desc.style.color = 'var(--muted)';
     desc.style.display = 'flex';
     desc.style.alignItems = 'center';
