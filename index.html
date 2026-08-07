@@ -387,7 +387,34 @@
       <input type="text" id="bday-name" placeholder="Введи имя точно как в Slack" maxlength="40">
       <div class="char-count" style="text-align:left; margin-top:5px;">💡 Напиши своё имя точно так, как оно написано у тебя в Slack</div>
     </div>
-    <button class="btn-main primary" style="width:100%;" onclick="startGame()">Открывать подарки! 🎉</button>
+    <button class="btn-main primary" style="width:100%; margin-bottom:10px;" onclick="startGame()">Выбрать пожелание 🎁</button>
+    <button class="btn-main ghost" style="width:100%;" onclick="startGiftShowcase()">Выбрать подарок 🎉</button>
+  </div>
+</div>
+
+<!-- ══════════════ GIFTS ══════════════ -->
+<div id="pg-gifts" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTo('pg-home')">←</button>
+    <span class="page-title" id="gifts-title">Выбери подарок 🎉</span>
+  </div>
+  <div class="game-body">
+    <p style="font-size:14px; color:var(--muted); margin-bottom:1.25rem; line-height:1.6;">
+      Выбери один подарок от компании — как только выберешь, People Team об этом узнает и подготовит его к твоему дню рождения.
+    </p>
+    <div id="gift-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <div id="gift-final" style="display:none; text-align:center; margin-top:1.5rem;">
+      <div class="confetti-emoji">🎉</div>
+      <div class="final-label">Твой подарок на этот год</div>
+      <div class="final-wish-box">
+        <div class="final-wish-text" id="gift-final-text"></div>
+      </div>
+      <div class="slack-note">
+        <div class="slack-dot"></div>
+        <span id="gift-slack-status">Отправляем уведомление в Slack...</span>
+      </div>
+      <button class="btn-main ghost" style="width:100%; margin-top:1rem;" onclick="goTo('pg-home')">На главную</button>
+    </div>
   </div>
 </div>
 
@@ -473,6 +500,7 @@
 
 const SLACK_WEBHOOK_URL = ''; // больше не используется напрямую — уведомления идут через n8n
 const N8N_WEBHOOK_URL = 'https://automation.carrotquest.io/webhook/wish-chosen'; // webhook: выбор пожелания (обрабатывает событие "wish_chosen")
+const GIFT_CHOSEN_URL = 'https://automation.carrotquest.io/webhook/gift-chosen'; // webhook: выбор подарка из витрины
 
 // НОВОЕ: раньше пожелания хранились в localStorage браузера (поэтому именинник не видел
 // пожелания, написанные с других устройств). Теперь это два отдельных n8n-вебхука,
@@ -485,6 +513,24 @@ const ADD_WISH_URL = 'https://automation.carrotquest.io/webhook/add-wish'; // we
 
 const ROWS = ['A','B','C','D','E'];
 const COLS = ['1','2','3','4','5'];
+
+const GIFTS = [
+  'Подписка на Лектр',
+  'Авторский курс на Puzzle English / Отдельный сервис',
+  'Подписка на сервис для медитаций Prosto',
+  'Cертификат Onetwotrip',
+  'Сертификат на Masters',
+  'Сертификат на Яндекс афишу',
+  'Сертификат в Золотое яблоко',
+  'Сертификат на Вайлдберриз',
+  'Сертификат Озон',
+  'Опция толстовка на ДР',
+  'Cертификат TUTU.ru на автобусные/жд/авиа билеты и отели',
+  'Подписка на Яндекс плюс',
+  'Сертификат Sputnik8 на экскурсии по всему миру',
+  'Подписка на Литрес',
+  'Подписка на правое полушарие интроверта'
+];
 
 let gameState = {
   opened: [],      // id открытых ячеек
@@ -572,6 +618,58 @@ async function startGame() {
 
 function resetGame() {
   gameState = { opened: [], wishes: [], bdayName: '', done: false };
+}
+
+// ── GIFT SHOWCASE ──
+function startGiftShowcase() {
+  const name = document.getElementById('bday-name').value.trim();
+  if (!name) { alert('Введи своё имя'); return; }
+  gameState.bdayName = name;
+  document.getElementById('gifts-title').textContent = '🎉 Выбери подарок, ' + name + '!';
+  document.getElementById('gift-final').style.display = 'none';
+  renderGifts();
+  goTo('pg-gifts');
+}
+
+function renderGifts() {
+  const list = document.getElementById('gift-list');
+  list.innerHTML = '';
+  document.getElementById('gift-list').style.display = 'flex';
+  GIFTS.forEach((giftName, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-main ghost';
+    btn.style.width = '100%';
+    btn.style.textAlign = 'left';
+    btn.textContent = giftName;
+    btn.onclick = () => chooseGift(giftName);
+    list.appendChild(btn);
+  });
+}
+
+function chooseGift(giftName) {
+  document.getElementById('gift-list').style.display = 'none';
+  document.getElementById('gift-final-text').textContent = giftName;
+  document.getElementById('gift-final').style.display = 'block';
+  sendGiftSlack(giftName, gameState.bdayName);
+}
+
+async function sendGiftSlack(giftName, bdayName) {
+  const el = document.getElementById('gift-slack-status');
+  if (!GIFT_CHOSEN_URL || GIFT_CHOSEN_URL.includes('ВСТАВЬ')) {
+    el.textContent = '⚠️ n8n не настроен — замени GIFT_CHOSEN_URL в коде';
+    return;
+  }
+  try {
+    await fetch(GIFT_CHOSEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenario: 'gift_chosen', birthdayPersonName: bdayName, giftName })
+    });
+    el.textContent = '✅ Уведомление отправлено в Slack!';
+    document.querySelector('#gift-final .slack-dot').style.background = '#6EE7B7';
+  } catch (e) {
+    el.textContent = '⚠️ Не удалось отправить — проверь GIFT_CHOSEN_URL';
+  }
 }
 
 // ── GRID ──
