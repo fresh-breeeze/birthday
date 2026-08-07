@@ -59,13 +59,8 @@
   }
 
   .home-badge {
-    width: 96px; height: 96px;
-    border-radius: var(--radius-lg);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 48px;
+    font-size: 72px;
     margin: 0 auto 1.5rem;
-    background: linear-gradient(145deg, var(--purple-light), var(--pink) 120%);
-    box-shadow: 0 14px 34px -10px rgba(108,86,232,0.45);
     animation: float 3s ease-in-out infinite;
   }
   @keyframes float { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-10px) rotate(2deg)} }
@@ -396,7 +391,7 @@
 
 <!-- ══════════════ HOME ══════════════ -->
 <div id="pg-home" class="page active">
-  <div class="home-badge">🎂</div>
+  <div class="home-badge">🎁</div>
   <span class="home-eyebrow">рубрика дети лукойла</span>
   <div class="home-title">Как хорошо,<br>что ты родился!</div>
   <p class="home-sub">Если ты именинник — открывай подарки и выбирай пожелания на свой год.<br><br>А еще ты можешь оставить тёплое пожелание, когда его выберут тебе придёт уведомление и звёздочка ⭐️.<br><br>Копи звёздочки ⭐️ и получай подарок как самый крутой желатель</p>
@@ -466,7 +461,7 @@
       <div class="char-count" style="text-align:left; margin-top:5px;">💡 Напиши своё имя точно так, как оно написано у тебя в Slack</div>
     </div>
     <button class="btn-main primary" style="width:100%; margin-bottom:10px;" onclick="startGame()">Выбрать пожелание 🎁</button>
-    <button class="btn-main ghost" style="width:100%;" onclick="startGiftShowcase()">Выбрать подарок 🎉</button>
+    <button class="btn-main primary" style="width:100%;" onclick="startGiftShowcase()">Выбрать подарок 🎉</button>
   </div>
 </div>
 
