@@ -510,7 +510,7 @@
   </div>
   <div class="game-body">
     <p style="font-size:14px; color:var(--muted); margin-bottom:1rem; line-height:1.6;">
-      Открывай три пожелания, выбирай одно, которое тебе хочется забрать в свой год. Тот, кто тебе это пожелал получит уведомление и звёздочку ⭐️
+      Открывай пожелания и выбирай одно, которое хочется забрать в свой год — необязательно открывать все три, можно выбрать после первого или второго. Тот, кто тебе это пожелал, получит уведомление и звёздочку ⭐️
     </p>
     <div class="game-status">
       <span class="status-text" id="status-text">Открой 3 подарка</span>
@@ -599,8 +599,8 @@ const ADD_WISH_URL = 'https://automation.carrotquest.io/webhook/add-wish'; // we
 
 // ════════════════════════════════════════════════
 
-const ROWS = ['A','B','C','D','E'];
-const COLS = ['1','2','3','4','5'];
+const ROWS = ['A','B','C'];
+const COLS = ['1','2','3'];
 
 const GIFTS = [
   { name: 'Подписка на Лектр', desc: 'Аудио-лекции по гуманитарным наукам: искусство, история, философия, литература, музыка, психология и др. Срок: 1 год.' },
@@ -857,7 +857,7 @@ async function buildGrid() {
       td.className = 'gift-cell';
 
       // Assign wish to cell deterministically (cycle through)
-      const idx = (ROWS.indexOf(row) * 5 + COLS.indexOf(col)) % allWishes.length;
+      const idx = (ROWS.indexOf(row) * COLS.length + COLS.indexOf(col)) % allWishes.length;
       const hasWish = allWishes.length > 0;
 
       const btn = document.createElement('button');
@@ -892,10 +892,7 @@ function openCell(cellId, wish, btn) {
 
   updateDots();
   updateStatus();
-
-  if (gameState.opened.length === 3) {
-    showWishes();
-  }
+  showWishes();
 }
 
 function updateDots() {
@@ -908,7 +905,8 @@ function updateDots() {
 function updateStatus() {
   const n = gameState.opened.length;
   const s = document.getElementById('status-text');
-  if (n < 3) s.textContent = 'Открой ещё ' + (3 - n) + ' подарок' + (3 - n === 1 ? '' : 'а');
+  if (n === 0) s.textContent = 'Открой пожелание';
+  else if (n < 3) s.textContent = 'Выбери одно ниже или открой ещё (максимум ' + (3 - n) + ')';
   else s.textContent = 'Выбери одно пожелание';
 }
 
@@ -933,7 +931,9 @@ function showWishes() {
     list.appendChild(card);
   });
 
-  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (gameState.wishes.length === 1) {
+    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 // ── CHOOSE FINAL ──
