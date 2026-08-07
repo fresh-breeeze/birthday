@@ -338,7 +338,7 @@
   <div class="home-emoji">🎁</div>
   <div class="home-title">Как хорошо,<br>что ты родился!</div>
   <p style="font-size:13px; color:var(--purple); font-weight:600; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:0.5rem;">рубрика дети лукойла</p>
-  <p class="home-sub">Оставь пожелание или — если ты именинник — открывай подарки!</p>
+  <p class="home-sub">Если ты именинник — открывай подарки!<br>Оставь тёплое пожелание, когда его выберут тебе придёт уведомление и звёздочка ⭐️. Копи звёздочки ⭐️ и получай подарок как самый крутой желатель</p>
   <div class="btn-group">
     <button class="btn-main primary" onclick="goTo('pg-bday-setup')">🎂 Я именинник!</button>
     <button class="btn-main ghost" onclick="goTo('pg-add')">✏️ Написать пожелание</button>
@@ -354,11 +354,11 @@
   </div>
   <div class="form-body">
     <p style="font-size:14px; color:var(--muted); margin-bottom:1.5rem; line-height:1.6;">
-      Твоё пожелание спрячется в один из подарков. Именинник откроет его сам — и узнает, от кого оно 🎁
+      Твоё пожелание спрячется в один из подарков. Именинник откроет его сам — и узнает, от кого оно 🎁, а ты получишь звёздочку ⭐️. За большее количество звёздочек пиплтим и тебе подарит подарок как самому крутому желателю.
     </p>
     <div class="field">
       <label>От кого</label>
-      <input type="text" id="f-author" placeholder="Введи имя точно как в Slack" maxlength="40">
+      <input type="text" id="f-author" placeholder="Введи имя и фамилию точно как в Slack" maxlength="40">
       <div class="char-count" style="text-align:left; margin-top:5px;">💡 Напиши своё имя точно так, как оно написано у тебя в Slack — это нужно чтобы уведомить тебя когда именинник выберет твоё пожелание</div>
     </div>
     <div class="field">
@@ -382,9 +382,8 @@
   <div class="bday-setup">
     <div style="font-size:48px; margin-bottom:12px;">🎂</div>
     <h3>Как тебя зовут?</h3>
-    <p>Введи своё имя — это нужно для Slack-уведомления коллегам, кто написал тебе пожелание.</p>
     <div class="field">
-      <input type="text" id="bday-name" placeholder="Введи имя точно как в Slack" maxlength="40">
+      <input type="text" id="bday-name" placeholder="Введи имя и фамилию точно как в Slack" maxlength="40">
       <div class="char-count" style="text-align:left; margin-top:5px;">💡 Напиши своё имя точно так, как оно написано у тебя в Slack</div>
     </div>
     <button class="btn-main primary" style="width:100%; margin-bottom:10px;" onclick="startGame()">Выбрать пожелание 🎁</button>
@@ -400,8 +399,16 @@
   </div>
   <div class="game-body">
     <p style="font-size:14px; color:var(--muted); margin-bottom:1.25rem; line-height:1.6;">
-      Выбери один подарок от компании — как только выберешь, People Team об этом узнает и подготовит его к твоему дню рождения.
+      Выбери один подарок от компании — как только выберешь, пиплтим об этом узнает и подготовит его к твоему дню рождения. Выбор подарка = клик по кнопке (будь внимательнее, не кликай все подряд).
     </p>
+    <div style="background:var(--purple-light); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:1.25rem; font-size:13px; line-height:1.6; color:var(--purple-dark);">
+      <strong>Наши корпоративные подарки 🥕🎁:</strong>
+      <ul style="margin:8px 0 0; padding-left:18px;">
+        <li style="margin-bottom:6px;"><strong>о новых знаниях, навыках и опыте</strong><br><span style="opacity:0.8;">мы любим развиваться, учиться новому и расти</span></li>
+        <li style="margin-bottom:6px;"><strong>о поддержке ваших интересов/хобби и образа жизни</strong><br><span style="opacity:0.8;">мы поддерживаем активный образ жизни и заботу о себе</span></li>
+        <li><strong>доступны для каждого, независимо от места проживания</strong><br><span style="opacity:0.8;">мы хотим, чтобы наше внимание было рядом с вами, где бы вы ни находились</span></li>
+      </ul>
+    </div>
     <div id="gift-list" style="display:flex; flex-direction:column; gap:10px;"></div>
     <div id="gift-final" style="display:none; text-align:center; margin-top:1.5rem;">
       <div class="confetti-emoji">🎉</div>
@@ -425,6 +432,9 @@
     <span class="page-title" id="game-title">Морской бой 🎁</span>
   </div>
   <div class="game-body">
+    <p style="font-size:14px; color:var(--muted); margin-bottom:1rem; line-height:1.6;">
+      Открывай три пожелания, выбирай одно, которое тебе хочется забрать в свой год. Тот, кто тебе это пожелал получит уведомление и звёздочку ⭐️
+    </p>
     <div class="game-status">
       <span class="status-text" id="status-text">Открой 3 подарка</span>
       <div class="dots">
@@ -515,21 +525,21 @@ const ROWS = ['A','B','C','D','E'];
 const COLS = ['1','2','3','4','5'];
 
 const GIFTS = [
-  'Подписка на Лектр',
-  'Авторский курс на Puzzle English / Отдельный сервис',
-  'Подписка на сервис для медитаций Prosto',
-  'Cертификат Onetwotrip',
-  'Сертификат на Masters',
-  'Сертификат на Яндекс афишу',
-  'Сертификат в Золотое яблоко',
-  'Сертификат на Вайлдберриз',
-  'Сертификат Озон',
-  'Опция толстовка на ДР',
-  'Cертификат TUTU.ru на автобусные/жд/авиа билеты и отели',
-  'Подписка на Яндекс плюс',
-  'Сертификат Sputnik8 на экскурсии по всему миру',
-  'Подписка на Литрес',
-  'Подписка на правое полушарие интроверта'
+  { name: 'Подписка на Лектр', desc: 'Аудио-лекции по гуманитарным наукам: искусство, история, философия, литература, музыка, психология и др. Срок: 1 год.' },
+  { name: 'Авторский курс на Puzzle English / Отдельный сервис', desc: 'Обучение английскому в игровой форме: авторский курс, курс по уровню или отдельный сервис на выбор. Срок: сервис — 1 год, авторский курс — бессрочно.' },
+  { name: 'Подписка на сервис для медитаций Prosto', desc: 'Библиотека курсов медитации: антистресс, лёгкость, медитации для родителей и детей. Срок: 1 год.' },
+  { name: 'Cертификат Onetwotrip', desc: 'На авиа-, жд- и автобусные билеты, а также отели. Срок: 12 месяцев.' },
+  { name: 'Сертификат на Masters', desc: 'На лекции по истории искусства, кино, литературе и декоративно-прикладному искусству. Срок: 12 месяцев.' },
+  { name: 'Сертификат на Яндекс афишу', desc: 'На кино, концерты и спектакли. Остаток не сгорает, можно доплатить разницу. Срок: 2 года.' },
+  { name: 'Сертификат в Золотое яблоко', desc: 'Электронный подарочный сертификат. Действует бессрочно.' },
+  { name: 'Сертификат на Вайлдберриз', desc: 'Электронный подарочный сертификат. Срок: 2 года.' },
+  { name: 'Сертификат Озон', desc: 'Электронный подарочный сертификат. Срок: 3 года.' },
+  { name: 'Опция толстовка на ДР', desc: 'Именная толстовка/свитшот с логотипом компании и индивидуальной надписью. Пиплтим напишет тебе в личку, чтобы согласовать цвет, размер и текст надписи.' },
+  { name: 'Cертификат TUTU.ru на автобусные/жд/авиа билеты и отели', desc: 'Оплата полностью или частично билета или отеля на сайте TUTU.ru. Срок: 1 год.' },
+  { name: 'Подписка на Яндекс плюс', desc: 'Яндекс Музыка + библиотека книг и аудиокниг. Срок: 6 месяцев.' },
+  { name: 'Сертификат Sputnik8 на экскурсии по всему миру', desc: 'Экскурсии от проверенных гидов в 760+ городах мира: групповые, мини-группы или индивидуальные. Срок: 1 год.' },
+  { name: 'Подписка на Литрес', desc: 'Книги, аудиокниги, журналы и другие товары на выбор из каталога ЛитРес. Срок: 6 месяцев.' },
+  { name: 'Подписка на правое полушарие интроверта', desc: '500+ саммари на темы от искусства и психологии до мемов и аниме. Новый контент каждый месяц. Срок: 1 год.' }
 ];
 
 let gameState = {
@@ -635,14 +645,39 @@ function renderGifts() {
   const list = document.getElementById('gift-list');
   list.innerHTML = '';
   document.getElementById('gift-list').style.display = 'flex';
-  GIFTS.forEach((giftName, i) => {
+  GIFTS.forEach((gift) => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.alignItems = 'stretch';
+    row.style.gap = '12px';
+    row.style.padding = '12px';
+    row.style.background = '#F8F8FC';
+    row.style.borderRadius = 'var(--radius-sm)';
+
     const btn = document.createElement('button');
-    btn.className = 'btn-main ghost';
-    btn.style.width = '100%';
-    btn.style.textAlign = 'left';
-    btn.textContent = giftName;
-    btn.onclick = () => chooseGift(giftName);
-    list.appendChild(btn);
+    btn.className = 'btn-main primary';
+    btn.style.flex = '0 0 40%';
+    btn.style.minWidth = '110px';
+    btn.style.fontSize = '13px';
+    btn.style.lineHeight = '1.3';
+    btn.style.whiteSpace = 'normal';
+    btn.style.height = 'auto';
+    btn.style.padding = '10px 8px';
+    btn.textContent = gift.name;
+    btn.onclick = () => chooseGift(gift.name);
+
+    const desc = document.createElement('div');
+    desc.style.flex = '1';
+    desc.style.fontSize = '12.5px';
+    desc.style.lineHeight = '1.5';
+    desc.style.color = 'var(--muted)';
+    desc.style.display = 'flex';
+    desc.style.alignItems = 'center';
+    desc.textContent = gift.desc;
+
+    row.appendChild(btn);
+    row.appendChild(desc);
+    list.appendChild(row);
   });
 }
 
