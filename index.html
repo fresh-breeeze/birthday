@@ -115,6 +115,7 @@
   .action-card.tone-pink { background: var(--pink); }
   .action-card.tone-blue { background: var(--blue); }
   .action-card.tone-orange { background: var(--orange); }
+  .action-card.tone-gold { background: var(--gold); }
 
   .btn-main {
     padding: 16px 28px;
@@ -417,6 +418,13 @@
         <span class="action-caption">Объясняем шутку рубрики</span>
       </span>
     </button>
+    <button class="action-card tone-gold" onclick="openRating()">
+      <span class="icon-chip">⭐️</span>
+      <span class="action-text">
+        <span class="action-label">Рейтинг желателей</span>
+        <span class="action-caption">Кто собрал больше всего звёзд</span>
+      </span>
+    </button>
   </div>
 </div>
 
@@ -567,6 +575,20 @@
   </div>
 </div>
 
+<!-- ══════════════ RATING ══════════════ -->
+<div id="pg-rating" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTo('pg-home')">←</button>
+    <span class="page-title">⭐️ Рейтинг желателей</span>
+  </div>
+  <div class="game-body">
+    <p style="font-size:14px; color:var(--muted); margin-bottom:1.25rem; line-height:1.6;">
+      Здесь те, кто оставлял тёплые пожелания. Звёздочка ⭐️ — когда именинник выбрал именно твоё пожелание.
+    </p>
+    <div id="rating-list"></div>
+  </div>
+</div>
+
 <!-- ══════════════ MANAGE ══════════════ -->
 <div id="pg-manage" class="page">
   <div class="page-header">
@@ -595,6 +617,7 @@ const GIFT_CHOSEN_URL = 'https://automation.carrotquest.io/webhook/gift-chosen';
 // которые читают/пишут в общую гугл-таблицу "ДР — Пожелания".
 // Оба нужно создать в n8n — сейчас тут плейсхолдеры, вставь сюда реальные адреса.
 const GET_WISHES_URL = 'https://automation.carrotquest.io/webhook/get-wishes'; // webhook: отдаёт список неиспользованных пожеланий (GET)
+const GET_RATING_URL = 'https://automation.carrotquest.io/webhook/get-rating'; // webhook: отдаёт рейтинг желателей (GET)
 const ADD_WISH_URL = 'https://automation.carrotquest.io/webhook/add-wish'; // webhook: сохраняет новое пожелание (POST)
 
 // ════════════════════════════════════════════════
@@ -653,6 +676,70 @@ async function getWishes() {
     console.error('Не удалось получить пожелания:', e);
     return [];
   }
+}
+
+// ── RATING ──
+async function openRating() {
+  goTo('pg-rating');
+  const list = document.getElementById('rating-list');
+  list.innerHTML = '<p style="text-align:center; color:var(--muted); padding:2rem 0;">Считаем звёздочки...</p>';
+  try {
+    const res = await fetch(GET_RATING_URL);
+    if (!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    const rating = Array.isArray(data) ? data.filter(r => r && r.author) : [];
+    renderRating(rating);
+  } catch (e) {
+    console.error('Не удалось получить рейтинг:', e);
+    list.innerHTML = '<p style="text-align:center; color:var(--muted); padding:2rem 0;">Не получилось загрузить рейтинг 😔</p>';
+  }
+}
+
+function renderRating(rating) {
+  const list = document.getElementById('rating-list');
+  list.innerHTML = '';
+  if (!rating.length) {
+    list.innerHTML = '<p style="text-align:center; color:var(--muted); padding:2rem 0;">Пока никто не оставил пожелание — будь первым! 🎁</p>';
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  rating.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '14px';
+    row.style.padding = '14px 18px';
+    row.style.marginBottom = '10px';
+    row.style.borderRadius = 'var(--radius)';
+    row.style.background = i < 3 ? 'var(--gold)' : '#F8F8FC';
+
+    const rank = document.createElement('div');
+    rank.style.fontSize = i < 3 ? '26px' : '15px';
+    rank.style.fontWeight = '700';
+    rank.style.width = '36px';
+    rank.style.textAlign = 'center';
+    rank.style.color = i < 3 ? 'inherit' : 'var(--muted)';
+    rank.textContent = i < 3 ? medals[i] : (i + 1);
+
+    const name = document.createElement('div');
+    name.style.flex = '1';
+    name.style.fontFamily = "'Unbounded', sans-serif";
+    name.style.fontWeight = '600';
+    name.style.fontSize = '15px';
+    name.textContent = r.author;
+
+    const stars = document.createElement('div');
+    stars.style.fontFamily = "'Unbounded', sans-serif";
+    stars.style.fontWeight = '700';
+    stars.style.fontSize = '15px';
+    stars.style.whiteSpace = 'nowrap';
+    stars.textContent = '⭐️ ' + (r.stars || 0);
+
+    row.appendChild(rank);
+    row.appendChild(name);
+    row.appendChild(stars);
+    list.appendChild(row);
+  });
 }
 
 async function saveWish() {
