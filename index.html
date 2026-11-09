@@ -180,6 +180,12 @@
   }
   .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--purple); background: white; }
   .field textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+  .combo { position: relative; }
+  .combo-list { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,0.08); max-height: 260px; overflow-y: auto; z-index: 20; }
+  .combo-list[hidden] { display: none; }
+  .combo-item { padding: 11px 16px; font-size: 15px; cursor: pointer; }
+  .combo-item:hover, .combo-item.active { background: var(--purple-light); color: var(--purple); }
+  .combo-empty { padding: 11px 16px; font-size: 13px; color: var(--muted); }
   .field select { appearance: none; cursor: pointer; }
 
   .char-count { font-size: 12px; color: var(--muted); text-align: right; margin-top: 4px; }
@@ -465,8 +471,11 @@
     <div style="font-size:48px; margin-bottom:12px;">🎂</div>
     <h3>Как тебя зовут?</h3>
     <div class="field">
-      <input type="text" id="bday-name" placeholder="Введи имя и фамилию точно как в Slack" maxlength="40">
-      <div class="char-count" style="text-align:left; margin-top:5px;">💡 Напиши своё имя точно так, как оно написано у тебя в Slack</div>
+      <div class="combo">
+        <input type="text" id="bday-name" placeholder="Начни вводить фамилию или имя" maxlength="40" autocomplete="off">
+        <div class="combo-list" id="bday-list" hidden></div>
+      </div>
+      <div class="char-count" id="bday-hint" style="text-align:left; margin-top:5px;">💡 Начни вводить фамилию или имя и выбери себя из списка</div>
     </div>
     <button class="btn-main primary" style="width:100%; margin-bottom:10px;" onclick="startGame()">Выбрать пожелание 🎁</button>
     <button class="btn-main primary" style="width:100%;" onclick="startGiftShowcase()">Выбрать подарок 🎉</button>
@@ -621,6 +630,7 @@ const GIFT_CHOSEN_URL = 'https://automation.carrotquest.io/webhook/gift-chosen';
 // Оба нужно создать в n8n — сейчас тут плейсхолдеры, вставь сюда реальные адреса.
 const GET_WISHES_URL = 'https://automation.carrotquest.io/webhook/get-wishes'; // webhook: отдаёт список неиспользованных пожеланий (GET)
 const GET_RATING_URL = 'https://automation.carrotquest.io/webhook/get-rating'; // webhook: отдаёт рейтинг желателей (GET)
+const GET_PEOPLE_URL = 'https://automation.carrotquest.io/webhook/get-people'; // webhook: список сотрудников для выбора именинника (GET)
 const ADD_WISH_URL = 'https://automation.carrotquest.io/webhook/add-wish'; // webhook: сохраняет новое пожелание (POST)
 
 // ════════════════════════════════════════════════
@@ -665,6 +675,7 @@ function goTo(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (id === 'pg-manage') renderManage();
+  if (id === 'pg-bday-setup') { selectedPerson = null; document.getElementById('bday-name').value = ''; document.getElementById('bday-list').hidden = true; loadPeople(); }
 }
 
 // ── WISHES STORAGE (через n8n + гугл-таблицу, вместо localStorage) ──
@@ -780,10 +791,118 @@ function updateCount() {
   document.getElementById('char-num').textContent = v.length;
 }
 
+// ── ВЫБОР ИМЕНИННИКА ИЗ СПИСКА ──
+// Список берётся из листа «Люди» через n8n (только имена). Чтобы добавить или убрать человека, правится таблица.
+let PEOPLE = [];
+let selectedPerson = null;
+const PEOPLE_CACHE_KEY = 'bday_people_v1';
+const PEOPLE_TTL = 10 * 60 * 1000;
+
+function normName(s) { return String(s || '').toLowerCase().replace(/ё/g, 'е').trim(); }
+
+function displayName(name) {
+  // в таблице «Фамилия Имя», в приветствии показываем только имя
+  const parts = String(name || '').trim().split(/\s+/);
+  const known = PEOPLE.some(p => p.name === name);
+  return known && parts.length > 1 ? parts.slice(1).join(' ') : name;
+}
+
+async function loadPeople() {
+  try {
+    const raw = sessionStorage.getItem(PEOPLE_CACHE_KEY);
+    if (raw) {
+      const c = JSON.parse(raw);
+      if (c && Date.now() - c.t < PEOPLE_TTL && Array.isArray(c.list) && c.list.length) { PEOPLE = c.list; updatePeopleHint(); return; }
+    }
+  } catch (e) {}
+  try {
+    const res = await fetch(GET_PEOPLE_URL);
+    if (!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    PEOPLE = Array.isArray(data) ? data.filter(p => p && p.name) : [];
+    if (PEOPLE.length) { try { sessionStorage.setItem(PEOPLE_CACHE_KEY, JSON.stringify({ t: Date.now(), list: PEOPLE })); } catch (e) {} }
+  } catch (e) {
+    console.error('Не удалось получить список сотрудников:', e);
+    PEOPLE = [];
+  }
+  updatePeopleHint();
+}
+
+function updatePeopleHint() {
+  const hint = document.getElementById('bday-hint');
+  const input = document.getElementById('bday-name');
+  if (!hint || !input) return;
+  if (PEOPLE.length) {
+    input.placeholder = 'Начни вводить фамилию или имя';
+    hint.textContent = '💡 Начни вводить фамилию или имя и выбери себя из списка';
+  } else {
+    input.placeholder = 'Введи имя и фамилию точно как в Slack';
+    hint.textContent = '💡 Список не загрузился. Напиши своё имя точно так, как оно написано у тебя в Slack';
+  }
+}
+
+function renderPeopleList() {
+  const input = document.getElementById('bday-name');
+  const box = document.getElementById('bday-list');
+  const q = normName(input.value);
+  if (!PEOPLE.length || !q) { box.hidden = true; return; }
+  const found = PEOPLE.filter(p => normName(p.name).includes(q) || normName(p.slackName).includes(q)).slice(0, 8);
+  box.innerHTML = '';
+  if (!found.length) {
+    const empty = document.createElement('div');
+    empty.className = 'combo-empty';
+    empty.textContent = 'Не нашли такого имени. Напиши Насте Федотовой, добавим тебя в список';
+    box.appendChild(empty);
+  } else {
+    found.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'combo-item';
+      item.textContent = p.name;
+      item.addEventListener('mousedown', e => { e.preventDefault(); pickPerson(p); });
+      item.addEventListener('touchstart', e => { e.preventDefault(); pickPerson(p); }, { passive: false });
+      box.appendChild(item);
+    });
+  }
+  box.hidden = false;
+}
+
+function pickPerson(p) {
+  selectedPerson = p;
+  document.getElementById('bday-name').value = p.name;
+  document.getElementById('bday-list').hidden = true;
+}
+
+function getBdayName() {
+  const typed = document.getElementById('bday-name').value.trim();
+  if (!typed) { alert('Выбери себя из списка'); return null; }
+  if (!PEOPLE.length) return typed; // список не загрузился, работаем как раньше: имя вводится вручную
+  if (selectedPerson && selectedPerson.name === typed) return selectedPerson.name;
+  const q = normName(typed);
+  const exact = PEOPLE.find(p => normName(p.name) === q || (p.slackName && normName(p.slackName) === q));
+  if (exact) { selectedPerson = exact; return exact.name; }
+  alert('Выбери себя из списка: начни вводить фамилию и нажми на своё имя');
+  return null;
+}
+
+(function initPeopleCombo() {
+  const input = document.getElementById('bday-name');
+  if (!input) return;
+  input.addEventListener('input', () => { selectedPerson = null; renderPeopleList(); });
+  input.addEventListener('focus', renderPeopleList);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const first = document.querySelector('#bday-list .combo-item');
+      if (first && !selectedPerson) { e.preventDefault(); const q = normName(input.value); const p = PEOPLE.find(x => normName(x.name).includes(q) || normName(x.slackName).includes(q)); if (p) pickPerson(p); }
+    }
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('.combo')) document.getElementById('bday-list').hidden = true; });
+  loadPeople();
+})();
+
 // ── GAME SETUP ──
 async function startGame() {
-  const name = document.getElementById('bday-name').value.trim();
-  if (!name) { alert('Введи своё имя'); return; }
+  const name = getBdayName();
+  if (!name) return;
   await enterWishes(name);
 }
 
@@ -792,7 +911,7 @@ async function enterWishes(name) {
   gameState.opened = [];
   gameState.wishes = [];
   gameState.done = false;
-  document.getElementById('game-title').textContent = '🎁 С днём рождения, ' + name + '!';
+  document.getElementById('game-title').textContent = '🎁 С днём рождения, ' + displayName(name) + '!';
   document.getElementById('opened-section').style.display = 'none';
   document.getElementById('final-screen').style.display = 'none';
   document.getElementById('wish-list').innerHTML = '';
@@ -812,14 +931,14 @@ function resetGame() {
 
 // ── GIFT SHOWCASE ──
 function startGiftShowcase() {
-  const name = document.getElementById('bday-name').value.trim();
-  if (!name) { alert('Введи своё имя'); return; }
+  const name = getBdayName();
+  if (!name) return;
   enterGifts(name);
 }
 
 function enterGifts(name) {
   gameState.bdayName = name;
-  document.getElementById('gifts-title').textContent = '🎉 Выбери подарок, ' + name + '!';
+  document.getElementById('gifts-title').textContent = '🎉 Выбери подарок, ' + displayName(name) + '!';
   document.getElementById('gift-final').style.display = 'none';
   renderGifts();
   goTo('pg-gifts');
